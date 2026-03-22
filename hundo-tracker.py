@@ -1,10 +1,9 @@
+import argparse
 import json
 import os
+import signal
 import subprocess
 import sys
-import zlib
-import argparse
-import signal
 import time
 
 from data.journals import JOURNALS
