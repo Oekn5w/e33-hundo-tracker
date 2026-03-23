@@ -14,7 +14,7 @@ Tracked progression (base / DLC):
 * Cosmetics (130 / 179)
 * Weapons (103 / 116)
 
-Cosmetics and Weapon progression is also available per character.
+Cosmetics and Weapon progression is also available per character (not exported to LiveSplit).
 
 Note that some items are dependend on choices (Game ending and Clea's outfit from Flying Manor), for those only a single item each is counted against the total.
 
@@ -22,7 +22,7 @@ Note that some items are dependend on choices (Game ending and Clea's outfit fro
 
 The utility does not have a UI.
 
-Launch it from commandline line via Python (probably most Python 3 versions work). `-h` gives the argument help.
+Launch it from commandline line via Python (probably most Python 3 versions work, package `pywin32` needs to be installed). `-h` gives the argument help.
 
 The only required argument is the path to the Expedition savefile. There is no automatic searching for savefile location. You should select the file that will be there and updated during the run, for Steam these are found under `%LOCALAPPDATA%\Sandfall\Saved\SaveGames\<steam-id>\EXPEDITION-<num>.sav`.
 
@@ -32,11 +32,16 @@ To have the utility monitor the file for changes (aka progression), supply the `
 
 Use argument `--dlc` to include items from the Thank You Update.
 
-Output:
+The argument `--format` defines, which formats are exported. Pass a triple like `"111"` (also default value) to select the formats. The order is:
+* `raw`: the value of the items currently collected for this category
+* `slash`: which outputs `current/maximum`
+* `pct`: percentage
+
+Output files created in the given output folder:
 * `data.json`
 * `obs_....txt`, if the `--obs` argument is supplied, can be used for GDI+ sources.
 * `missing.json`, if the argument `--cheater` is supplied, contain the internal names of the missing items
-* If the `--livesplit` argument is supplied, the data is attempted to be transmitted to a localhost Livesplit Webssocket server as Custom Variables (when implemented)
+* If the `--livesplit` argument is supplied along with monitoring, the data is attempted to be transmitted to the localhost Livesplit Named Pipe as Custom Variables. The variable names exported are listed in the [output folder](./out/_livesplit_customVars.txt)
 
 ### Acknowledgements
 The data for this utility is largely based on:

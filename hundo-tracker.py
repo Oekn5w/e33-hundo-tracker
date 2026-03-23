@@ -1,10 +1,12 @@
 import argparse
+import datetime
 import json
 import os
 import signal
 import subprocess
 import sys
 import time
+import win32file
 
 from data.journals import JOURNALS
 from data.monoco import MONOCO_SKILLS
@@ -16,6 +18,7 @@ from data.weapons import DATA_WEAPONS, DATA_WEAPONS_DLC
 SAVEFILE=None
 DLC=True
 OUTPUT_FOLDER=None
+FORMATS_EXPORTED=[True, True, True]
 
 MONITOR=False
 CHEATER=False
@@ -65,6 +68,8 @@ data = {
 
 missing = {}
 
+livesplit_conn = None
+
 ITER_WEAPONS = [
   (KEY_VERSO, 'V'),
   (KEY_LUNE, 'L'),
@@ -96,7 +101,8 @@ def main():
   parser.add_argument('-m','--monitor', action='store_true', help='Don\'t return after a single pass, monitor the file for changes')
   parser.add_argument('-c','--cheater', action='store_true', help='Write file with the missing items to output folder')
   parser.add_argument('--obs', action='store_true', help='Write Textfiles for OBS to output folder.')
-  parser.add_argument('--livesplit', action='store_true', help='Try to transmit data to Livesplit Websocket Server as custom variables.')
+  parser.add_argument('--livesplit', action='store_true', help='Try to transmit data to Livesplit Websocket Server as custom variables. Only attempted when using monitoring.')
+  parser.add_argument('-f', '--format', default='111', help='triple of 0/1 which of these format should be exported, in order: [raw,slash,percentage], default "111"')
   args=parser.parse_args()
   global SAVEFILE
   SAVEFILE = args.savefile
@@ -121,7 +127,10 @@ def main():
   global WRITE_OBS
   WRITE_OBS = args.obs
   global WRITE_LS
-  WRITE_LS = args.livesplit
+  WRITE_LS = args.livesplit and args.monitor # no Livesplit export if not continuously running
+
+  global FORMATS_EXPORTED
+  FORMATS_EXPORTED = [args.format[0]!="0", args.format[1]!="0", args.format[2]!="0"]
 
   global PICTOS
   global WEAPONS
@@ -160,10 +169,9 @@ def main():
     last_data_written = ''
     last_file_existance = None
     signal.signal(signal.SIGINT, signal_handler)
-
     while True:
       if ABORT_REQUESTED:
-        print('Exiting')
+        print(datetime.datetime.now().isoformat() + ' Exiting')
         sys.exit(0)
       doUpdate = False
       fileExists = os.path.exists(SAVEFILE)
@@ -179,13 +187,13 @@ def main():
           last_ts_checked = modificationTime
           doUpdate = True
       if doUpdate:
-        print('New version of file detected')
+        print(datetime.datetime.now().isoformat() + ' New version of file detected')
         if updateData():
           temp_data_serialized = json.dumps(data,sort_keys=True)
           if temp_data_serialized != last_data_written:
             writeData()
             last_data_written = temp_data_serialized
-            print('Changes to tracked items detected - data updated')
+            print(datetime.datetime.now().isoformat() + ' Changes to tracked items detected - data updated')
         else:
           last_ts_checked = 0 # try again next iteration
       time.sleep(0.5)
@@ -283,6 +291,20 @@ def updateData() -> bool:
     return False
 
 def writeData():
+  if WRITE_LS:
+    global livesplit_conn
+    livesplit_conn = win32file.CreateFile(
+          r'\\.\pipe\LiveSplit',
+          win32file.GENERIC_WRITE,
+          0,
+          None,
+          win32file.OPEN_EXISTING,
+          0,
+          None
+      )
+    global livesplit_failed
+    livesplit_failed = False
+
   writeDataHelper(data[KEY_JOURNALS], KEY_JOURNALS)
   writeDataHelper(data[KEY_MUSIC], KEY_MUSIC)
   writeDataHelper(data[KEY_FEET], KEY_FEET)
@@ -296,18 +318,35 @@ def writeData():
   if CHEATER:
     with open(os.path.join(OUTPUT_FOLDER, 'missing.json'),'w',encoding="utf-8") as f:
       json.dump(missing, f, indent=2)
+  if WRITE_LS:
+    win32file.CloseHandle(livesplit_conn)
+    livesplit_conn = None
+    if livesplit_failed:
+      print('Failed to publish to Livesplit')
 
 def writeDataHelper(num_arr, basename, output_LS = True):
   percentage = "%0.2f" % (100*num_arr[0]/num_arr[1]) + '%'
   if WRITE_OBS:
-    with open(os.path.join(OUTPUT_FOLDER, 'obs_' + basename + '_slash.txt'),'w',encoding="utf-8") as f:
-      f.write(str(num_arr[0]) + '/' + str(num_arr[1]))
-    with open(os.path.join(OUTPUT_FOLDER, 'obs_' + basename + '_raw.txt'),'w',encoding="utf-8") as f:
-      f.write(str(num_arr[0]))
-    with open(os.path.join(OUTPUT_FOLDER, 'obs_' + basename + '_pct.txt'),'w',encoding="utf-8") as f:
-      f.write(percentage)
-  if WRITE_LS and output_LS:
-    pass
+    if FORMATS_EXPORTED[0]:
+      with open(os.path.join(OUTPUT_FOLDER, 'obs_' + basename + '_raw.txt'),'w',encoding="utf-8") as f:
+        f.write(str(num_arr[0]))
+    if FORMATS_EXPORTED[1]:
+      with open(os.path.join(OUTPUT_FOLDER, 'obs_' + basename + '_slash.txt'),'w',encoding="utf-8") as f:
+        f.write(str(num_arr[0]) + '/' + str(num_arr[1]))
+    if FORMATS_EXPORTED[2]:
+      with open(os.path.join(OUTPUT_FOLDER, 'obs_' + basename + '_pct.txt'),'w',encoding="utf-8") as f:
+        f.write(percentage)
+  if WRITE_LS and output_LS and (livesplit_conn is not None):
+    try:
+      if FORMATS_EXPORTED[0]:
+        win32file.WriteFile(livesplit_conn, str.encode("setcustomvariable " + json.dumps(["e33_" + basename + "_raw", str(num_arr[0])]) + "\r\n"))
+      if FORMATS_EXPORTED[1]:
+        win32file.WriteFile(livesplit_conn, str.encode("setcustomvariable " + json.dumps(["e33_" + basename + "_slash", str(num_arr[0]) + '/' + str(num_arr[1])]) + "\r\n"))
+      if FORMATS_EXPORTED[2]:
+        win32file.WriteFile(livesplit_conn, str.encode("setcustomvariable " + json.dumps(["e33_" + basename + "_pct", percentage]) + "\r\n"))
+    except:
+      global livesplit_failed
+      livesplit_failed = True
 
 def signal_handler(sig, frame):
   global ABORT_REQUESTED
