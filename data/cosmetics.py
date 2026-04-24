@@ -159,12 +159,14 @@ DATA_COSMETICS = {
 
 DATA_COSMETICS_DLC = copy.deepcopy(DATA_COSMETICS)
 DATA_COSMETICS_DLC["G"] |= {
+    "FaceGustave_Anniversary",
     "FaceGustave_BunBraid",
     "FaceGustave_Chic",
     "FaceGustave_Esquie",
     "SkinGustave_Chic",
 }
 DATA_COSMETICS_DLC["L"] |= {
+    "FaceLune_Anniversary",
     "FaceLune_DoubleBun",
     "FaceLune_DoubleBun_Long",
     "FaceLune_Esquie",
@@ -175,6 +177,7 @@ DATA_COSMETICS_DLC["L"] |= {
     "SkinLune_Osquio",
 }
 DATA_COSMETICS_DLC["A"] |= {
+    "FaceMaelle_Anniversary",
     "FaceMaelle_Chic",
     "FaceMaelle_DoubleBun",
     "FaceMaelle_DoubleBun_Long",
@@ -186,6 +189,7 @@ DATA_COSMETICS_DLC["A"] |= {
     "SkinMaelle_Osquio",
 }
 DATA_COSMETICS_DLC["M"] |= {
+    "FaceMonoco_Anniversary",
     "FaceMonoco_Baguette",
     "FaceMonoco_Chic",
     "FaceMonoco_DoubleBun",
@@ -199,6 +203,7 @@ DATA_COSMETICS_DLC["M"] |= {
     "SkinMonoco_Osquio",
 }
 DATA_COSMETICS_DLC["S"] |= {
+    "FaceSciel_Anniversary",
     "FaceSciel_DoubleBun",
     "FaceSciel_DoubleBun_Long",
     "FaceSciel_Esquie",
@@ -209,6 +214,7 @@ DATA_COSMETICS_DLC["S"] |= {
     "SkinSciel_Osquio",
 }
 DATA_COSMETICS_DLC["V"] |= {
+    "FaceVerso_Anniversary",
     "FaceVerso_BunBraid",
     "FaceVerso_Chic",
     "FaceVerso_Esquie",

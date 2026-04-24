@@ -2,7 +2,7 @@
 
 Utility for displaying progression data during 100% Speedruns of Clair Obscur Expedition 33. As there is no in-game checklist and no definition of 100% this is based on what we can check for from reading the generated save files.
 
-Pre-Order Bonuses are excluded from tracking, DLC items from the Thank You Update can be enabled.
+Pre-Order Bonuses are excluded from tracking, DLC items from the Thank You and Anniversary Update (combined only) can be enabled.
 
 Only NG items are tracked and also only items obtainable for Gustave in the Act I.
 
@@ -11,7 +11,7 @@ Tracked progression (base / DLC):
 * Music Records (33)
 * Pictos (193 / 210)
 * Monoco's feet collection (46)
-* Cosmetics (130 / 179)
+* Cosmetics (130 / 185)
 * Weapons (103 / 116)
 
 Cosmetics and Weapon progression is also available per character (not exported to LiveSplit).
